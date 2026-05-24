@@ -1,0 +1,357 @@
+{
+  "name": "Seo optimization of fiverr gig and description",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        -160
+      ],
+      "id": "1efe1cd7-5619-4080-bebe-e319e3b11861",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v2/extract",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"urls\": [\n    \"https://www.fiverr.com/as_chims/draw-cute-pokemon-art-54af?context_referrer=subcategory_listing&source=pagination&ref_ctx_id=4df35369a36541bd98b1c5b71736b395&pckg_id=1&pos=4&context_type=rating&funnel=4df35369a36541bd98b1c5b71736b395&imp_id=2d54c6bd-a60d-4b0a-af6c-c3fc5d5e4b2a\"\n  ],\n  \"prompt\": \"Extract the fiverr gig title and description\",\n  \"schema\": {\n  \"type\": \"object\",\n  \"properties\": {\n    \"fiverr_gig_title\": {\n      \"type\": \"string\",\n      \"description\": \"The main title of the Fiverr gig\"\n    },\n    \"fiverr_gig_description\": {\n      \"type\": \"string\",\n      \"description\": \"The full text content of the 'About This Gig' section\"\n    }\n  },\n  \"required\": [\n    \"fiverr_gig_title\",\n    \"fiverr_gig_description\"\n  ]\n  }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -944,
+        -160
+      ],
+      "id": "495ac8c2-1b1b-4300-b35c-b67440ef0d7f",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "XB7ahuD5ujBvmxEM",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.firecrawl.dev/v2/extract/{{ $('HTTP Request').item.json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -736,
+        -160
+      ],
+      "id": "7de48913-076d-4e08-88a0-501ce46caa90",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "XB7ahuD5ujBvmxEM",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "36ad8c32-bcdd-4f89-8e98-768945760d68",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -528,
+        -160
+      ],
+      "id": "b0b20411-1683-4eef-bcc1-dcb4d206c32c",
+      "name": "If",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        -176
+      ],
+      "id": "f69b8c16-291d-49dd-9ad8-477362b39423",
+      "name": "Wait",
+      "webhookId": "98eb66e6-84d0-481d-a489-7ef6b6393bef"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=gig title: {{ $json.data.fiverr_gig_title }}\ngig description: {{ $json.data.fiverr_gig_description }}",
+        "options": {
+          "systemMessage": "You are an SEO and Fiverr gig optimization expert.\n\nYour task:\n- Given a Fiverr gig’s title and description, research how real buyers search on Fiverr and Google.  \n- Use this insight to refine the gig’s title and description so they become more SEO-friendly, while staying faithful to the original meaning.  \n- Do not completely rewrite the content; only adjust and enhance keywords naturally within the existing text.  \n\nRules:\n- Keep the original style and intent of the gig.  \n- Improve keyword usage for Fiverr search visibility.  \n- Do not add unrelated services.  \n- Provide exactly 5 Fiverr tags (short keyword phrases, max 3–4 words each).  \n\nOutput requirements:\n- Return **only valid JSON** that matches the schema below.  \n- Do not include any extra text, explanations, prefixes (like \"output:\"), or code fences (```json).  \n- Do not escape characters with \\n — output plain JSON only.  \n\nSchema (must be followed exactly):\n\nIMPORTANT: Always respond ONLY with a valid JSON object in this exact format, \nno matter what. Never write conversational text:\n\n{\n  \"previous_title\": \"...\",\n  \"updated_title\": \"...\",\n  \"previous_description\": \"...\",\n  \"updated_description\": \"...\",\n  \"tags\": [\"tag1\", \"tag2\", \"tag3\", \"tag4\", \"tag5\"]\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        -560
+      ],
+      "id": "6a04a7fc-433a-4382-8199-d70270fef740",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the raw output from AI Agent\nconst agentOutput = $('AI Agent').item.json.output;\n\n// Clean and extract JSON\nlet cleaned = agentOutput\n  .replace(/```json/gi, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Find JSON object\nconst start = cleaned.indexOf('{');\nconst end = cleaned.lastIndexOf('}');\nconst jsonStr = cleaned.slice(start, end + 1);\n\n// Parse it\nconst result = JSON.parse(jsonStr);\n\n// Ensure tags has exactly 5\nwhile (result.tags.length < 5) result.tags.push('general');\nif (result.tags.length > 5) result.tags = result.tags.slice(0, 5);\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -560
+      ],
+      "id": "a91ba54c-41e5-419f-bedc-d3b36d12d123",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -320
+      ],
+      "id": "a75a33d2-45df-404c-a6aa-618f6f1f199b",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "3xxvVCgFL3cYkZxm",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "tayyaba.bashir256@gmail.com",
+        "subject": "updated fiverr gig and description",
+        "message": "=<html>   <body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\">      \n<!-- updated Gig -->   \n<h2 style=\"color:#2c3e50;\">🚗 Updated Gig</h2>     <p><b>Previous Title:</b> {{ $json.previous_title }}\n</p>     \n<p><b>Updated Title:</b> {{ $json.updated_title }}</p>    \n<p><b>Previous Description:</b> {{ $json.previous_description }}\n</p>     <p><b>Updated Description:</b> {{ $json.updated_description }}</p> \n<h4 style=\"margin-top:10px;\">Tags:</h4>     <ul>       \n<li>{{ $json.tags[0] }}</li>       \n<li>{{ $json.tags[1] }}</li>      \n<li>{{ $json.tags[2] }}</li>      \n<li>{{ $json.tags[3] }}</li>   \n<li>{{ $json.tags[4] }}</li>     </ul>     <hr style=\"margin:20px 0;\">   </body> </html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        -560
+      ],
+      "id": "70596151-780c-4997-8161-2ac9dd886053",
+      "name": "Send a message",
+      "webhookId": "be3e6735-4325-4ac2-840c-b99600b095e9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "TvVKKJoQ4p0Kfwni",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Trigger node\n",
+        "height": 240,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1328,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "be3ad0af-221d-44de-aa5c-bc0483b07d92",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Scrape fiverr gig and description",
+        "height": 352,
+        "width": 896,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -976,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "52ba8894-813c-45d6-bde9-1f03101b7c80",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Update and refine the gig and description",
+        "height": 256,
+        "width": 560,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        -640
+      ],
+      "typeVersion": 1,
+      "id": "f1d4735e-1c2f-4598-8fcd-9d1b9c60279b",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Send mail response",
+        "height": 240,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -608
+      ],
+      "typeVersion": 1,
+      "id": "9bd0849c-092a-47d0-85f0-e5debab09fb3",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e610a613-ecca-4ce7-b519-e98029c0dc17",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66a601c41bc3246945245187271ea27e87a5f9284b103fddf01b8ce5dca78182"
+  },
+  "id": "rlgw3OFUXeIXRdej",
+  "tags": []
+}
